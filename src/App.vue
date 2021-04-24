@@ -1,28 +1,337 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <!-- 一个button按钮 -->
+    <el-button
+      class="addButton"
+      type="primary"
+      size="small"
+      plain
+      @click="dialogFormVisible = true"
+      >添加规则</el-button
+    >
+    <!-- 一个表格 -->
+
+    <el-table
+      :data="disposeTableData"
+      stripe
+      style="font-size: 12px"
+      :header-cell-style="{ background: '#f5f7fa', color: '#606266' }"
+      :fit="true"
+      row-class-name="tableRowClassName"
+      cell-class-name="tablCellClassName"
+      size="small"
+    >
+      <el-table-column
+        prop="priority"
+        label="编号"
+        sortable
+        align="center"
+        width="80px"
+      ></el-table-column>
+      <el-table-column
+        prop="strategy"
+        label="策略"
+        width="60px"
+        align="center"
+      ></el-table-column>
+      <el-table-column prop="protos" label="协议类型" align="center"></el-table-column>
+      <el-table-column
+        prop="addr_src.ip_mask"
+        label="源 IP"
+        :show-overflow-tooltip="false"
+        width="140px"
+        align="center"
+      >
+        <!-- 悬浮提示 -->
+        <template slot-scope="scope">
+          <el-tooltip placement="top-start" effect="light">
+            <div slot="content">
+              生效：{{ scope.row.addr_src.ip_real }}/{{ scope.row.addr_src.mask }}
+            </div>
+            <span style="cursor: pointer">{{ scope.row.addr_src.ip_mask }}</span>
+            <!-- </ul> -->
+          </el-tooltip>
+        </template>
+
+        <!-- end -->
+      </el-table-column>
+      <el-table-column prop="port_src" label="源端口" align="center">
+        <template slot-scope="scope">
+          <div v-if="scope.row.port_src.length > 0 && Array.isArray(scope.row.port_src)">
+            <span
+              v-for="(item, index) in scope.row.port_src"
+              :key="index"
+              class="port-span"
+              >{{ item }}&nbsp;</span
+            >
+          </div>
+          <div v-else>{{ scope.row.port_src }}</div>
+        </template>
+      </el-table-column>
+      <el-table-column
+        prop="addr_dst.ip_mask"
+        label="目的 IP"
+        width="140px"
+        align="center"
+        :show-overflow-tooltip="false"
+      >
+        <template slot-scope="scope">
+          <el-tooltip placement="top-start" effect="light">
+            <div slot="content">
+              生效：{{ scope.row.addr_dst.ip_real }}/{{ scope.row.addr_dst.mask }}
+            </div>
+            <span style="cursor: pointer">{{ scope.row.addr_dst.ip_mask }}</span>
+            <!-- </ul> -->
+          </el-tooltip>
+        </template>
+      </el-table-column>
+      <el-table-column prop="port_dst" label="目的端口" align="center">
+        <template slot-scope="scope">
+          <div v-if="scope.row.port_dst.length > 0 && Array.isArray(scope.row.port_dst)">
+            <span
+              v-for="(item, index) in scope.row.port_dst"
+              :key="index"
+              class="port-span"
+              >{{ item }}
+            </span>
+          </div>
+          <div v-else>{{ scope.row.port_dst }}</div>
+        </template>
+      </el-table-column>
+
+      <el-table-column prop="hit_count" label="命中次数" sortable align="center">
+        <template slot-scope="scope">
+          <span>{{ scope.row.hit_count }}</span>
+        </template>
+      </el-table-column>
+
+      <el-table-column
+        prop="create_time"
+        label="创建时间"
+        width="160px"
+        sortable
+        align="center"
+      ></el-table-column>
+      <el-table-column prop="" label="操作" width="100px" align="center">
+        <template slot-scope="scope">
+          <el-button
+            type="text"
+            size="small"
+            @click="handleDelete(scope.$index, scope.row)"
+            >删除</el-button
+          >
+        </template>
+      </el-table-column>
+    </el-table>
+    <addForm
+      @formSubmit="formSubmit"
+      :dialog-form-visible="dialogFormVisible"
+      :table-data="tableData"
+      @formCancel="formCancel"
+      v-if="dialogFormVisible"
+    ></addForm>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
-
+import instanceAxios from "./api/axios-init";
+import baseData from "./api/helpers";
+import addForm from "./components/addForm";
+import axios from "axios";
 export default {
-  name: 'App',
+  name: "acl",
+  data() {
+    return {
+      tableData: [],
+      hitcount_arr: [],
+      disposeTableData: [],
+      dialogFormVisible: false,
+    };
+  },
+  mounted() {
+    this.getTableData();
+  },
   components: {
-    HelloWorld
-  }
-}
+    addForm,
+  },
+  watch: {
+    hitcount_arr() {
+      this.tableDataDispose();
+    },
+  },
+  methods: {
+    getTableData() {
+      instanceAxios
+        .get("/xdp-acl/IPv4/rules")
+        .then((result) => {
+          if (result.status === 200) {
+            this.$set(this, "tableData", result.data);
+            this.getHitcount();
+          }
+        })
+        .catch((err) => {
+          console.log("err", err);
+        });
+    },
+    getHitcount() {
+      axios
+        .get(baseData.URL + "/xdp-acl/IPv4/rules/hitcount")
+        .then((result) => {
+          if (result.status === 200) {
+            this.hitcount_arr = result.data;
+          }
+          setTimeout(() => {
+            this.getHitcount();
+          }, baseData.timeInterval);
+        })
+        .catch((err) => {
+          console.log(err);
+          setTimeout(() => {
+            this.getHitcount();
+          }, baseData.timeInterval);
+        });
+    },
+    // 时间格式化
+    format(data, fmt) {
+      let newDate = new Date(data);
+      var o = {
+        "M+": newDate.getMonth() + 1, //月份
+        "d+": newDate.getDate(), //日
+        "h+": newDate.getHours(), //小时
+        "m+": newDate.getMinutes(), //分
+        "s+": newDate.getSeconds(), //秒
+        "q+": Math.floor((newDate.getMonth() + 3) / 3), //季度
+        S: newDate.getMilliseconds(), //毫秒
+      };
+      if (/(y+)/.test(fmt)) {
+        fmt = fmt.replace(
+          RegExp.$1,
+          (newDate.getFullYear() + "").substr(4 - RegExp.$1.length)
+        );
+      }
+      for (var k in o) {
+        if (new RegExp("(" + k + ")").test(fmt)) {
+          fmt = fmt.replace(
+            RegExp.$1,
+            RegExp.$1.length == 1 ? o[k] : ("00" + o[k]).substr(("" + o[k]).length)
+          );
+        }
+      }
+      return fmt;
+    },
+    handleDelete(index, row) {
+      this.$confirm(`确定要删除编号为 ${row.priority} 的规则吗`, "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        callback: (action) => {
+          if (action === "confirm") {
+            instanceAxios
+              .delete("/xdp-acl/IPv4/rule" + `?priority=${row.priority}`)
+              .then((res) => {
+                if (res.status === 200) {
+                  this.tableData.splice(index, 1);
+                  this.disposeTableData.splice(index, 1);
+                  this.$notify({
+                    title: "成功",
+                    message: "删除成功",
+                    type: "success",
+                    duration: 3000,
+                  });
+                }
+              })
+              .catch((err) => {
+                console.log(err);
+              });
+          }
+        },
+      });
+    },
+    formSubmit(data) {
+      this.tableData.unshift(data);
+      this.dialogFormVisible = false;
+      this.$notify({
+        title: "提示",
+        message: `添加编号： ${data.priority} 规则成功`,
+        type: "success",
+        duration: 2000,
+      });
+      this.tableDataDispose();
+    },
+    formCancel() {
+      this.dialogFormVisible = false;
+    },
+    tableDataDispose() {
+      const that = this;
+      let resultsData = [];
+      // 数组深拷贝
+      let originalData = JSON.parse(JSON.stringify(this.tableData));
+      originalData.map((x) => {
+        // 策略重新赋值：1 拒绝，2允许
+        x.strategy = x.strategy === 1 ? "拒绝" : "允许";
+        // 协议类型判断：未实现
+        let protos_arr = [];
+        if ((x.protos & 0x01) > 0) {
+          protos_arr.push("TCP");
+        }
+        if (((x.protos >> 1) & 0x01) > 0) {
+          protos_arr.push("UDP");
+        }
+        if (((x.protos >> 2) & 0x01) > 0) {
+          protos_arr.push("ICMP");
+        }
+        x.protos = protos_arr.join(" ");
+        let HaveICMP = x.protos.indexOf("ICMP") != -1;
+        // 源ip+端口拼接
+        let addr_src = x.addr_src;
+        x.addr_src.ip_mask = addr_src.ip_user + "/" + addr_src.mask;
+
+        // 源端口拼接,使用空格分割
+        x.port_src = this.portFilter(x.port_src, HaveICMP);
+        // 目的IP拼接
+        let addr_dst = x.addr_dst;
+        x.addr_dst.ip_mask = addr_dst.ip_user + "/" + addr_dst.mask;
+        // 需要注意，当端口为空时，为all
+        x.port_dst = this.portFilter(x.port_dst, HaveICMP);
+        // 命中次数
+        this.hitcount_arr.map((item) => {
+          if (x.priority === item.priority) {
+            item.hit_count = BigInt(item.hit_count);
+            x = Object.assign(x, item);
+          }
+        });
+        // 创建时间
+        x.create_time = that.format(new Date(x.create_time), "yyyy-MM-dd hh:mm:ss");
+        resultsData.push(x);
+      });
+      this.disposeTableData = resultsData;
+    },
+    portFilter(portArray, protos) {
+      if (protos) {
+        return "-";
+      } else {
+        if (!portArray.length) {
+          return "ALL";
+        } else {
+          return portArray;
+        }
+      }
+    },
+  },
+};
 </script>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+.addButton.el-button {
+  margin-bottom: 24px;
+  font-size: 13px;
+}
+.tablCellClassName.el-table td {
+  padding: 10px 0;
+}
+.el-tag--plain.el-tag--info {
+  margin-right: 5px;
+}
+.port-span {
+  word-break: keep-all;
 }
 </style>
