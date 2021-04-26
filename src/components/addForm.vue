@@ -26,7 +26,12 @@
           :label-width="formLabelWidth"
           class="form-item-view form-item-little"
         >
-          <el-input class="input-little" v-model="form.priority" type="number"></el-input>
+          <el-input
+            class="input-little"
+            v-model="form.priority"
+            type="number"
+            oninput="if(value>10239)value=10239;if(value<1)value=1"
+          ></el-input>
         </el-form-item>
         <el-form-item
           label="策略 :"
@@ -106,7 +111,7 @@
             <span style="">
               <el-tooltip style="" class="item" effect="light" placement="top">
                 <div slot="content">
-                  <p class="assist-text">• 端口范围 : 1~65535</p>
+                  <p class="assist-text">• 端口范围 : 0~65535</p>
                   <p class="assist-text">• 多个端口用空格分割</p>
                   <p class="assist-text">• 空白不填表示所有端口</p>
                 </div>
@@ -171,7 +176,7 @@
             <span style="">
               <el-tooltip style="" class="item" effect="light" placement="top">
                 <div slot="content">
-                  <p class="assist-text">• 端口范围 : 1~65535</p>
+                  <p class="assist-text">• 端口范围 : 0~65535</p>
                   <p class="assist-text">• 多个端口用空格分割</p>
                   <p class="assist-text">• 空白不填表示所有端口</p>
                 </div>
