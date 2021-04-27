@@ -18,7 +18,8 @@ import {
     Spinner,
     Loading,
     Notification,
-    Tag
+    Tag,
+    MessageBox
 } from 'element-ui'
 const element = {
     install: function (Vue) {
@@ -43,6 +44,7 @@ const element = {
         Vue.use(Tag)
 
         Vue.prototype.$loading = Loading.service;
+        Vue.prototype.$confirm = MessageBox.confirm;
         Vue.prototype.$notify = Notification;
     }
 }
