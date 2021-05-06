@@ -9,26 +9,17 @@
       @click="dialogFormVisible = true"
       >添加规则</el-button
     >
-    <!-- 一个表格 
-    ref="plxTable"
-             :height="height"
-             :checkboxConfig="{checkMethod: selectable, highlight: true}"
-             @selection-change="selectionChange"
-             @table-body-scroll="scroll"
-             show-header-overflow="ellipsis"
-    -->
-
     <ux-grid
       ref="rulesTable"
       row-class-name="tableRowClassName"
       cell-class-name="tablCellClassName"
-      :border="true"
       size="small"
       style="font-size: 12px"
       :header-cell-style="{ background: '#f5f7fa', color: '#606266' }"
       :fit="true"
       stripe
       :height="height"
+      :border="false"
     >
       <ux-table-column
         field="priority"
@@ -53,64 +44,75 @@
       >
         <!-- 悬浮提示 -->
         <template slot-scope="scope">
-          <el-tooltip placement="top-start" effect="light">
-            <div slot="content">
-              生效：{{ scope.row.addr_src.ip_real }}/{{ scope.row.addr_src.mask }}
-            </div>
-            <span style="cursor: pointer">{{ scope.row.addr_src.ip_mask }}</span>
-            <!-- </ul> -->
+          <el-tooltip
+            placement="top-start"
+            effect="light"
+            v-for="(src_item, src_index) in scope.row.addr_src_arr"
+            :key="src_index"
+          >
+            <div slot="content">生效：{{ src_item.net_no }}/{{ src_item.mask }}</div>
+            <p style="cursor: pointer" class="dst_text">
+              {{ src_item.ip_user }}/{{ src_item.mask }}
+            </p>
           </el-tooltip>
         </template>
 
         <!-- end -->
       </ux-table-column>
-      <ux-table-column field="port_src" title="源端口" align="center">
+      <ux-table-column field="port_src_arr" title="源端口" align="center">
         <template slot-scope="scope">
           <div
             class="port-view"
-            v-if="scope.row.port_src.length > 0 && Array.isArray(scope.row.port_src)"
+            v-if="
+              scope.row.port_src_arr.length > 0 && Array.isArray(scope.row.port_src_arr)
+            "
           >
             <span
-              v-for="(item, index) in scope.row.port_src"
+              v-for="(item, index) in scope.row.port_src_arr"
               :key="index"
               class="port-span"
               >{{ item }}&nbsp;</span
             >
           </div>
-          <div v-else>{{ scope.row.port_src }}</div>
+          <div v-else>{{ scope.row.port_src_arr }}</div>
         </template>
       </ux-table-column>
       <ux-table-column
-        field="addr_dst.ip_mask"
         title="目的 IP"
         width="140px"
         align="center"
         :show-overflow-tooltip="false"
       >
         <template slot-scope="scope">
-          <el-tooltip placement="top-start" effect="light">
-            <div slot="content">
-              生效：{{ scope.row.addr_dst.ip_real }}/{{ scope.row.addr_dst.mask }}
-            </div>
-            <span style="cursor: pointer">{{ scope.row.addr_dst.ip_mask }}</span>
-            <!-- </ul> -->
+          <el-tooltip
+            placement="top-start"
+            effect="light"
+            v-for="(dst_item, dst_index) in scope.row.addr_dst_arr"
+            :key="dst_index"
+          >
+            <div slot="content">生效：{{ dst_item.net_no }}/{{ dst_item.mask }}</div>
+            <p style="cursor: pointer" class="dst_text">
+              {{ dst_item.ip_user }}/{{ dst_item.mask }}
+            </p>
           </el-tooltip>
         </template>
       </ux-table-column>
-      <ux-table-column field="port_dst" title="目的端口" align="center">
+      <ux-table-column field="port_dst_arr" title="目的端口" align="center">
         <template slot-scope="scope">
           <div
             class="port-view"
-            v-if="scope.row.port_dst.length > 0 && Array.isArray(scope.row.port_dst)"
+            v-if="
+              scope.row.port_dst_arr.length > 0 && Array.isArray(scope.row.port_dst_arr)
+            "
           >
             <span
-              v-for="(item, index) in scope.row.port_dst"
+              v-for="(item, index) in scope.row.port_dst_arr"
               :key="index"
               class="port-span"
               >{{ item }}
             </span>
           </div>
-          <div v-else>{{ scope.row.port_dst }}</div>
+          <div v-else>{{ scope.row.port_dst_arr }}</div>
         </template>
       </ux-table-column>
 
@@ -155,7 +157,6 @@ export default {
   data() {
     return {
       height: 0,
-      tableData: [],
       hitcount_arr: [],
       dialogFormVisible: false,
       isFirstLoad: true,
@@ -177,8 +178,8 @@ export default {
         .get("/xdp-acl/IPv4/rules")
         .then((result) => {
           if (result.status === 200) {
-            // this.tableData = result.data;
-            this.$set(this, "tableData", result.data);
+            this.tableData = result.data;
+            // this.$set(this, "tableData", result.data);
             this.getHitcount();
           }
         })
@@ -247,8 +248,13 @@ export default {
     handleDelete(scope) {
       let priority = scope.row.priority;
       let rule_index = scope.rowIndex;
-      this.tableData.splice(rule_index, 1);
-      this.$confirm(`确定要删除编号为 ${priority} 的规则吗`, "提示", {
+      console.log("deleteStart:", this.tableData.length);
+
+      this.$set(this, "tableData", this.tableData.splice(rule_index, 1));
+      this.$forceUpdate();
+      console.log("deleteEnd:", this.tableData.length, this.tableData);
+
+      this.$confirm(`确定要删除编号为 ${priority} 的规则吗？`, "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
         callback: (action) => {
@@ -263,14 +269,12 @@ export default {
                     type: "success",
                     duration: 3000,
                   });
-                  console.log("deleteStart:", this.tableData.length);
 
                   // for (var i = 0; i < this.tableData.length; i++) {
                   //   if (this.tableData[i].priority == row.priority) {
                   //     break;
                   //   }
                   // }
-                  console.log("deleteEnd:", this.tableData.length);
                 }
               })
               .catch((err) => {
@@ -327,15 +331,15 @@ export default {
       x.protos = protos_arr.join(" ");
       let onlyContainICMP = protos_arr.includes("ICMP") && protos_arr.length == 1;
       // 源ip+端口拼接
-      let addr_src = x.addr_src;
-      x.addr_src.ip_mask = addr_src.ip_user + "/" + addr_src.mask;
+      // let addr_src = x.addr_src;
+      // x.addr_src.ip_mask = addr_src.ip_user + "/" + addr_src.mask;
       // 源端口拼接,使用空格分割
-      x.port_src = this.portFilter(x.port_src, onlyContainICMP);
+      x.port_src_arr = this.portFilter(x.port_src_arr, onlyContainICMP);
       // 目的IP拼接
-      let addr_dst = x.addr_dst;
-      x.addr_dst.ip_mask = addr_dst.ip_user + "/" + addr_dst.mask;
+      // let addr_dst = x.addr_dst;
+      // x.addr_dst.ip_mask = addr_dst.ip_user + "/" + addr_dst.mask;
       // 需要注意，当端口为空时，为all
-      x.port_dst = this.portFilter(x.port_dst, onlyContainICMP);
+      x.port_dst_arr = this.portFilter(x.port_dst_arr, onlyContainICMP);
       // 创建时间
       x.create_time = that.format(new Date(x.create_time), "yyyy-MM-dd hh:mm:ss");
       // return x;
@@ -374,5 +378,14 @@ export default {
 }
 .elx-cell.c--ellipsis {
   max-height: none !important;
+}
+.elx-table.size--small {
+  font-size: 12px !important;
+}
+.dst_text {
+  line-height: 10px;
+}
+.el-message-box__btns > button {
+  padding: 7px 15px;
 }
 </style>

@@ -49,7 +49,7 @@
           :label-width="formLabelWidth"
           class="form-item-view"
         >
-        <!-- @change="selectChange" -->
+          <!-- @change="selectChange" -->
           <el-select
             v-model="form.protos"
             multiple
@@ -69,7 +69,7 @@
         <el-form-item
           label="源 IP ："
           :label-width="formLabelWidth"
-          prop="addr_src.ip_user"
+          prop="addr_src_arr.ip_user"
           class="form-item-view"
         >
           <template slot="label">
@@ -88,13 +88,13 @@
           </template>
           <el-input
             class="input-small"
-            v-model="form.addr_src.ip_user"
+            v-model="form.addr_src_arr.ip_user"
             autocomplete="off"
             placeholder="示例 : 123.123.123.123"
           ></el-input>
           /
           <el-input-number
-            v-model="form.addr_src.mask"
+            v-model="form.addr_src_arr.mask"
             controls-position="right"
             :min="0"
             :max="32"
@@ -104,7 +104,7 @@
         <el-form-item
           label="源端口："
           :label-width="formLabelWidth"
-          prop="port_src"
+          prop="port_src_arr"
           class="form-item-view"
         >
           <template slot="label">
@@ -125,7 +125,7 @@
           </template>
           <el-input
             class="input-view"
-            v-model="form.port_src"
+            v-model="form.port_src_arr"
             autocomplete="off"
             placeholder="示例 : 1 60 80"
             :disabled="isICMP"
@@ -134,7 +134,7 @@
         <el-form-item
           label="目的 IP："
           :label-width="formLabelWidth"
-          prop="addr_dst.ip_user"
+          prop="addr_dst_arr.ip_user"
           class="form-item-view"
         >
           <template slot="label">
@@ -153,13 +153,13 @@
           </template>
           <el-input
             class="input-small"
-            v-model="form.addr_dst.ip_user"
+            v-model="form.addr_dst_arr.ip_user"
             autocomplete="off"
             placeholder="示例 : 123.123.123.123"
           ></el-input>
           /
           <el-input-number
-            v-model.number="form.addr_dst.mask"
+            v-model.number="form.addr_dst_arr.mask"
             controls-position="right"
             :min="0"
             :max="32"
@@ -169,7 +169,7 @@
         <el-form-item
           label="目的端口："
           :label-width="formLabelWidth"
-          prop="port_dst"
+          prop="port_dst_arr"
           class="form-item-view"
         >
           <template slot="label">
@@ -190,7 +190,7 @@
           </template>
           <el-input
             class="input-view"
-            v-model="form.port_dst"
+            v-model="form.port_dst_arr"
             autocomplete="off"
             placeholder="示例 : 1 60 80"
             :disabled="isICMP"
@@ -282,16 +282,16 @@ export default {
         priority: "",
         strategy: 2,
         protos: [],
-        addr_src: {
+        addr_src_arr: {
           ip_user: "0.0.0.0",
           mask: 24,
         },
-        port_src: "",
-        addr_dst: {
+        port_src_arr: "",
+        addr_dst_arr: {
           ip_user: "0.0.0.0",
           mask: 0,
         },
-        port_dst: "",
+        port_dst_arr: "",
       },
       rules: {
         priority: [
@@ -325,25 +325,25 @@ export default {
             trigger: "blur",
           },
         ],
-        "addr_src.ip_user": [
+        "addr_src_arr.ip_user": [
           {
             validator: validatorIP,
             trigger: "blur",
           },
         ],
-        "addr_dst.ip_user": [
+        "addr_dst_arr.ip_user": [
           {
             validator: validatorIP,
             trigger: "blur",
           },
         ],
-        port_src: [
+        port_src_arr: [
           {
             validator: validatorPORT,
             trigger: "blur",
           },
         ],
-        port_dst: [
+        port_dst_arr: [
           {
             validator: validatorPORT,
             trigger: "blur",
@@ -389,12 +389,33 @@ export default {
       });
       formData.protos = protos;
       formData.priority = Number(formData.priority);
-      formData.port_src =
-        formData.port_src.length == 0 ? [] : this.portFilter(formData.port_src);
-      formData.port_dst =
-        formData.port_dst.length == 0 ? [] : this.portFilter(formData.port_dst);
+      formData.port_src_arr =
+        formData.port_src_arr.length == 0 ? [] : this.portFilter(formData.port_src_arr);
+      formData.port_dst_arr =
+        formData.port_dst_arr.length == 0 ? [] : this.portFilter(formData.port_dst_arr);
+      let newFormData = formData;
+
+      newFormData.addr_src_arr = [formData.addr_src_arr];
+      newFormData.addr_dst_arr = [formData.addr_dst_arr];
+
+      /*
+        priority: "",
+        strategy: 2,
+        protos: [],
+        addr_src_arr: {
+          ip_user: "0.0.0.0",
+          mask: 24,
+        },
+        port_src_arr: "",
+        addr_dst_arr: {
+          ip_user: "0.0.0.0",
+          mask: 0,
+        },
+        port_dst_arr: "",
+        */
+
       instanceAxios
-        .post("/xdp-acl/IPv4/rule", formData)
+        .post("/xdp-acl/IPv4/rule", newFormData)
         .then((res) => {
           if (res.status === 201) {
             this.$emit("formSubmit", res.data);
@@ -416,31 +437,31 @@ export default {
       return portArry;
     },
     // selectChange(data) {
-      // if (!data.length) {
-      //   this.czfas.map((item) => {
-      //     item.disabled = false;
-      //     this.isICMP = false;
-      //   });
-      // } else {
-      //   if (data.includes("ICMP")) {
-      //     // 选择ICMP的处理方法：
-      //     this.czfas.map((item) => {
-      //       if (item.id != "ICMP") {
-      //         item.disabled = true;
-      //         this.isICMP = true;
-      //         this.form.port_src = "";
-      //         this.form.port_dst = "";
-      //       }
-      //     });
-      //   } else {
-      //     this.czfas.map((item) => {
-      //       if (item.id == "ICMP") {
-      //         item.disabled = true;
-      //         this.isICMP = false;
-      //       }
-      //     });
-      //   }
-      // }
+    // if (!data.length) {
+    //   this.czfas.map((item) => {
+    //     item.disabled = false;
+    //     this.isICMP = false;
+    //   });
+    // } else {
+    //   if (data.includes("ICMP")) {
+    //     // 选择ICMP的处理方法：
+    //     this.czfas.map((item) => {
+    //       if (item.id != "ICMP") {
+    //         item.disabled = true;
+    //         this.isICMP = true;
+    //         this.form.port_src = "";
+    //         this.form.port_dst_arr = "";
+    //       }
+    //     });
+    //   } else {
+    //     this.czfas.map((item) => {
+    //       if (item.id == "ICMP") {
+    //         item.disabled = true;
+    //         this.isICMP = false;
+    //       }
+    //     });
+    //   }
+    // }
     // },
   },
 };
