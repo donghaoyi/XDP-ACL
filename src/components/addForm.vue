@@ -49,13 +49,13 @@
           :label-width="formLabelWidth"
           class="form-item-view"
         >
+        <!-- @change="selectChange" -->
           <el-select
             v-model="form.protos"
             multiple
             placeholder="请选择"
             clearable
             class="input-view"
-            @change="selectChange"
           >
             <el-option
               v-for="item in czfas"
@@ -415,33 +415,33 @@ export default {
       let portArry = port.trim().split(/\s+/).map(Number);
       return portArry;
     },
-    selectChange(data) {
-      if (!data.length) {
-        this.czfas.map((item) => {
-          item.disabled = false;
-          this.isICMP = false;
-        });
-      } else {
-        if (data.includes("ICMP")) {
-          // 选择ICMP的处理方法：
-          this.czfas.map((item) => {
-            if (item.id != "ICMP") {
-              item.disabled = true;
-              this.isICMP = true;
-              this.form.port_src = "";
-              this.form.port_dst = "";
-            }
-          });
-        } else {
-          this.czfas.map((item) => {
-            if (item.id == "ICMP") {
-              item.disabled = true;
-              this.isICMP = false;
-            }
-          });
-        }
-      }
-    },
+    // selectChange(data) {
+      // if (!data.length) {
+      //   this.czfas.map((item) => {
+      //     item.disabled = false;
+      //     this.isICMP = false;
+      //   });
+      // } else {
+      //   if (data.includes("ICMP")) {
+      //     // 选择ICMP的处理方法：
+      //     this.czfas.map((item) => {
+      //       if (item.id != "ICMP") {
+      //         item.disabled = true;
+      //         this.isICMP = true;
+      //         this.form.port_src = "";
+      //         this.form.port_dst = "";
+      //       }
+      //     });
+      //   } else {
+      //     this.czfas.map((item) => {
+      //       if (item.id == "ICMP") {
+      //         item.disabled = true;
+      //         this.isICMP = false;
+      //       }
+      //     });
+      //   }
+      // }
+    // },
   },
 };
 </script>

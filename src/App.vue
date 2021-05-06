@@ -9,35 +9,44 @@
       @click="dialogFormVisible = true"
       >添加规则</el-button
     >
-    <!-- 一个表格 -->
+    <!-- 一个表格 
+    ref="plxTable"
+             :height="height"
+             :checkboxConfig="{checkMethod: selectable, highlight: true}"
+             @selection-change="selectionChange"
+             @table-body-scroll="scroll"
+             show-header-overflow="ellipsis"
+    -->
 
-    <el-table
-      :data="disposeTableData"
-      stripe
+    <ux-grid
+      ref="rulesTable"
+      row-class-name="tableRowClassName"
+      cell-class-name="tablCellClassName"
+      :border="true"
+      size="small"
       style="font-size: 12px"
       :header-cell-style="{ background: '#f5f7fa', color: '#606266' }"
       :fit="true"
-      row-class-name="tableRowClassName"
-      cell-class-name="tablCellClassName"
-      size="small"
+      stripe
+      :height="height"
     >
-      <el-table-column
-        prop="priority"
-        label="编号"
+      <ux-table-column
+        field="priority"
+        title="编号"
         sortable
         align="center"
         width="80px"
-      ></el-table-column>
-      <el-table-column
-        prop="strategy"
-        label="策略"
+      ></ux-table-column>
+      <ux-table-column
+        field="strategy"
+        title="策略"
         width="60px"
         align="center"
-      ></el-table-column>
-      <el-table-column prop="protos" label="协议类型" align="center"></el-table-column>
-      <el-table-column
-        prop="addr_src.ip_mask"
-        label="源 IP"
+      ></ux-table-column>
+      <ux-table-column field="protos" title="协议类型" align="center"></ux-table-column>
+      <ux-table-column
+        field="addr_src.ip_mask"
+        title="源 IP"
         :show-overflow-tooltip="false"
         width="140px"
         align="center"
@@ -54,10 +63,13 @@
         </template>
 
         <!-- end -->
-      </el-table-column>
-      <el-table-column prop="port_src" label="源端口" align="center">
+      </ux-table-column>
+      <ux-table-column field="port_src" title="源端口" align="center">
         <template slot-scope="scope">
-          <div v-if="scope.row.port_src.length > 0 && Array.isArray(scope.row.port_src)">
+          <div
+            class="port-view"
+            v-if="scope.row.port_src.length > 0 && Array.isArray(scope.row.port_src)"
+          >
             <span
               v-for="(item, index) in scope.row.port_src"
               :key="index"
@@ -67,10 +79,10 @@
           </div>
           <div v-else>{{ scope.row.port_src }}</div>
         </template>
-      </el-table-column>
-      <el-table-column
-        prop="addr_dst.ip_mask"
-        label="目的 IP"
+      </ux-table-column>
+      <ux-table-column
+        field="addr_dst.ip_mask"
+        title="目的 IP"
         width="140px"
         align="center"
         :show-overflow-tooltip="false"
@@ -84,10 +96,13 @@
             <!-- </ul> -->
           </el-tooltip>
         </template>
-      </el-table-column>
-      <el-table-column prop="port_dst" label="目的端口" align="center">
+      </ux-table-column>
+      <ux-table-column field="port_dst" title="目的端口" align="center">
         <template slot-scope="scope">
-          <div v-if="scope.row.port_dst.length > 0 && Array.isArray(scope.row.port_dst)">
+          <div
+            class="port-view"
+            v-if="scope.row.port_dst.length > 0 && Array.isArray(scope.row.port_dst)"
+          >
             <span
               v-for="(item, index) in scope.row.port_dst"
               :key="index"
@@ -97,22 +112,22 @@
           </div>
           <div v-else>{{ scope.row.port_dst }}</div>
         </template>
-      </el-table-column>
+      </ux-table-column>
 
-      <el-table-column prop="hit_count" label="命中次数" sortable align="center">
+      <ux-table-column field="hitcount" title="命中次数" sortable align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.hit_count }}</span>
+          <span>{{ scope.row.hitcount }}</span>
         </template>
-      </el-table-column>
+      </ux-table-column>
 
-      <el-table-column
-        prop="create_time"
-        label="创建时间"
+      <ux-table-column
+        field="create_time"
+        title="创建时间"
         width="160px"
         sortable
         align="center"
-      ></el-table-column>
-      <el-table-column prop="" label="操作" width="100px" align="center">
+      ></ux-table-column>
+      <ux-table-column field="" title="操作" width="100px" align="center">
         <template slot-scope="scope">
           <el-button
             type="text"
@@ -121,8 +136,8 @@
             >删除</el-button
           >
         </template>
-      </el-table-column>
-    </el-table>
+      </ux-table-column>
+    </ux-grid>
     <addForm
       @formSubmit="formSubmit"
       :dialog-form-visible="dialogFormVisible"
@@ -142,22 +157,21 @@ export default {
   name: "acl",
   data() {
     return {
-      tableData: [],
+      height: 0,
       hitcount_arr: [],
-      disposeTableData: [],
       dialogFormVisible: false,
+      isFirstLoad: true,
     };
   },
   mounted() {
+    this.height = 600; // 动态设置高度
     this.getTableData();
   },
   components: {
     addForm,
   },
   watch: {
-    hitcount_arr() {
-      this.tableDataDispose();
-    },
+    hitcount_arr() {},
   },
   methods: {
     getTableData() {
@@ -165,7 +179,7 @@ export default {
         .get("/xdp-acl/IPv4/rules")
         .then((result) => {
           if (result.status === 200) {
-            this.$set(this, "tableData", result.data);
+            this.tableData = result.data;
             this.getHitcount();
           }
         })
@@ -179,6 +193,18 @@ export default {
         .then((result) => {
           if (result.status === 200) {
             this.hitcount_arr = result.data;
+            let hit_count_obj = {};
+            for (let i = 0; i < this.hitcount_arr.length; i++) {
+              hit_count_obj[this.hitcount_arr[i].priority] = this.hitcount_arr[i];
+            }
+            for (let i = 0; i < this.tableData.length; i++) {
+              this.tableData[i].hitcount = BigInt(
+                hit_count_obj[this.tableData[i].priority].hit_count
+              );
+            }
+            if (this.isFirstLoad) {
+              this.tableDataDispose();
+            }
           }
           setTimeout(() => {
             this.getHitcount();
@@ -229,14 +255,21 @@ export default {
               .delete("/xdp-acl/IPv4/rule" + `?priority=${row.priority}`)
               .then((res) => {
                 if (res.status === 200) {
-                  this.tableData.splice(index, 1);
-                  this.disposeTableData.splice(index, 1);
                   this.$notify({
                     title: "成功",
                     message: "删除成功",
                     type: "success",
                     duration: 3000,
                   });
+                  console.log("deleteStart:", this.tableData.length);
+                  for (var i = 0; i < this.tableData.length; i++) {
+                    if (this.tableData[i].priority == row.priority) {
+                      this.tableData.splice(i, 1);
+                      this.$forceUpdate();
+                      break;
+                    }
+                  }
+                  console.log("deleteEnd:", this.tableData.length);
                 }
               })
               .catch((err) => {
@@ -255,58 +288,59 @@ export default {
         type: "success",
         duration: 2000,
       });
-      this.tableDataDispose();
+      this.tableDataDispose(false);
     },
     formCancel() {
       this.dialogFormVisible = false;
     },
+
     tableDataDispose() {
       const that = this;
-      let resultsData = [];
-      // 数组深拷贝
-      let originalData = JSON.parse(JSON.stringify(this.tableData));
-      originalData.map((x) => {
-        // 策略重新赋值：1 拒绝，2允许
-        x.strategy = x.strategy === 1 ? "拒绝" : "允许";
-        // 协议类型判断：未实现
-        let protos_arr = [];
-        if ((x.protos & 0x01) > 0) {
-          protos_arr.push("TCP");
-        }
-        if (((x.protos >> 1) & 0x01) > 0) {
-          protos_arr.push("UDP");
-        }
-        if (((x.protos >> 2) & 0x01) > 0) {
-          protos_arr.push("ICMP");
-        }
-        x.protos = protos_arr.join(" ");
-        let HaveICMP = x.protos.indexOf("ICMP") != -1;
-        // 源ip+端口拼接
-        let addr_src = x.addr_src;
-        x.addr_src.ip_mask = addr_src.ip_user + "/" + addr_src.mask;
-
-        // 源端口拼接,使用空格分割
-        x.port_src = this.portFilter(x.port_src, HaveICMP);
-        // 目的IP拼接
-        let addr_dst = x.addr_dst;
-        x.addr_dst.ip_mask = addr_dst.ip_user + "/" + addr_dst.mask;
-        // 需要注意，当端口为空时，为all
-        x.port_dst = this.portFilter(x.port_dst, HaveICMP);
-        // 命中次数
-        this.hitcount_arr.map((item) => {
-          if (x.priority === item.priority) {
-            item.hit_count = BigInt(item.hit_count);
-            x = Object.assign(x, item);
-          }
+      if (this.isFirstLoad) {
+        this.tableData.map((item) => {
+          that.dataSet(item);
         });
-        // 创建时间
-        x.create_time = that.format(new Date(x.create_time), "yyyy-MM-dd hh:mm:ss");
-        resultsData.push(x);
-      });
-      this.disposeTableData = resultsData;
+        this.isFirstLoad = false;
+      } else {
+        that.dataSet(this.tableData[0]);
+      }
+      this.$refs.rulesTable.reloadData(this.tableData);
     },
-    portFilter(portArray, protos) {
-      if (protos) {
+    dataSet(data) {
+      const that = this;
+      let x = data;
+      // 策略重新赋值：1 拒绝，2允许
+      x.strategy = x.strategy == 1 ? "拒绝" : "允许";
+      // 协议类型判断：未实现
+      let protos_arr = [];
+      if ((x.protos & 0x01) > 0) {
+        protos_arr.push("TCP");
+      }
+      if (((x.protos >> 1) & 0x01) > 0) {
+        protos_arr.push("UDP");
+      }
+      if (((x.protos >> 2) & 0x01) > 0) {
+        protos_arr.push("ICMP");
+      }
+
+      x.protos = protos_arr.join(" ");
+      let onlyContainICMP = protos_arr.includes("ICMP") && protos_arr.length == 1;
+      // 源ip+端口拼接
+      let addr_src = x.addr_src;
+      x.addr_src.ip_mask = addr_src.ip_user + "/" + addr_src.mask;
+      // 源端口拼接,使用空格分割
+      x.port_src = this.portFilter(x.port_src, onlyContainICMP);
+      // 目的IP拼接
+      let addr_dst = x.addr_dst;
+      x.addr_dst.ip_mask = addr_dst.ip_user + "/" + addr_dst.mask;
+      // 需要注意，当端口为空时，为all
+      x.port_dst = this.portFilter(x.port_dst, onlyContainICMP);
+      // 创建时间
+      x.create_time = that.format(new Date(x.create_time), "yyyy-MM-dd hh:mm:ss");
+      // return x;
+    },
+    portFilter(portArray, onlyContainICMP) {
+      if (onlyContainICMP) {
         return "-";
       } else {
         if (!portArray.length) {
@@ -333,5 +367,11 @@ export default {
 }
 .port-span {
   word-break: keep-all;
+}
+.port-view {
+  white-space: pre-wrap;
+}
+.elx-cell.c--ellipsis {
+  max-height: none !important;
 }
 </style>
