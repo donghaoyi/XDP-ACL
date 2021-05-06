@@ -129,10 +129,7 @@
       ></ux-table-column>
       <ux-table-column field="" title="操作" width="100px" align="center">
         <template slot-scope="scope">
-          <el-button
-            type="text"
-            size="small"
-            @click="handleDelete(scope.$index, scope.row)"
+          <el-button type="text" size="small" @click="handleDelete(scope)"
             >删除</el-button
           >
         </template>
@@ -158,6 +155,7 @@ export default {
   data() {
     return {
       height: 0,
+      tableData: [],
       hitcount_arr: [],
       dialogFormVisible: false,
       isFirstLoad: true,
@@ -179,7 +177,8 @@ export default {
         .get("/xdp-acl/IPv4/rules")
         .then((result) => {
           if (result.status === 200) {
-            this.tableData = result.data;
+            // this.tableData = result.data;
+            this.$set(this, "tableData", result.data);
             this.getHitcount();
           }
         })
@@ -245,14 +244,17 @@ export default {
       }
       return fmt;
     },
-    handleDelete(index, row) {
-      this.$confirm(`确定要删除编号为 ${row.priority} 的规则吗`, "提示", {
+    handleDelete(scope) {
+      let priority = scope.row.priority;
+      let rule_index = scope.rowIndex;
+      this.tableData.splice(rule_index, 1);
+      this.$confirm(`确定要删除编号为 ${priority} 的规则吗`, "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
         callback: (action) => {
           if (action === "confirm") {
             instanceAxios
-              .delete("/xdp-acl/IPv4/rule" + `?priority=${row.priority}`)
+              .delete("/xdp-acl/IPv4/rule" + `?priority=${priority}`)
               .then((res) => {
                 if (res.status === 200) {
                   this.$notify({
@@ -262,13 +264,12 @@ export default {
                     duration: 3000,
                   });
                   console.log("deleteStart:", this.tableData.length);
-                  for (var i = 0; i < this.tableData.length; i++) {
-                    if (this.tableData[i].priority == row.priority) {
-                      this.tableData.splice(i, 1);
-                      this.$forceUpdate();
-                      break;
-                    }
-                  }
+
+                  // for (var i = 0; i < this.tableData.length; i++) {
+                  //   if (this.tableData[i].priority == row.priority) {
+                  //     break;
+                  //   }
+                  // }
                   console.log("deleteEnd:", this.tableData.length);
                 }
               })
