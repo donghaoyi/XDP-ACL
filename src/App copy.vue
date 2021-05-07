@@ -140,7 +140,7 @@
     <addForm
       @formSubmit="formSubmit"
       :dialog-form-visible="dialogFormVisible"
-      :table-data="tableData.rules_arr"
+      :table-data="tableData"
       @formCancel="formCancel"
       v-if="dialogFormVisible"
     ></addForm>
@@ -157,33 +157,28 @@ export default {
   data() {
     return {
       height: 0,
-      tableData: {
-        rules_arr: [],
-        hitcount_arr: [],
-      },
+      tableData: [],
+      hitcount_arr: [],
       dialogFormVisible: false,
       isFirstLoad: true,
     };
   },
   mounted() {
     this.height = 600; // 动态设置高度
-    this.getRules();
+    this.getTableData();
   },
   components: {
     addForm,
   },
-  watch: {
-    "tableData.rules_arr"() {
-      this.$refs.rulesTable.reloadData(this.tableData.rules_arr);
-    },
-  },
+  watch: {},
   methods: {
-    getRules() {
+    getTableData() {
       instanceAxios
         .get("/xdp-acl/IPv4/rules")
         .then((result) => {
           if (result.status === 200) {
-            this.$set(this.tableData, "rules_arr", result.data);
+            // this.tableData = result.data;
+            this.$set(this.tableData, result.data);
             this.getHitcount();
           }
         })
@@ -213,36 +208,50 @@ export default {
 
     handleDelete(scope) {
       let priority = scope.row.priority;
-      let rule_index = scope.rowIndex;
+      // let rule_index = scope.rowIndex;
+      // console.log("deleteStart:", this.tableData.length);
+      // this.$forceUpdate();
+      // console.log("deleteEnd:", this.tableData.length, this.tableData);
+
       this.$confirm(`确定要删除编号为 ${priority} 的规则吗？`, "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
         callback: (action) => {
           if (action === "confirm") {
-            instanceAxios
-              .delete("/xdp-acl/IPv4/rule" + `?priority=${priority}`)
-              .then((res) => {
-                if (res.status === 200) {
-                  this.$notify({
-                    title: "成功",
-                    message: "删除成功",
-                    type: "success",
-                    duration: 3000,
-                  });
-                  this.tableData.rules_arr.splice(rule_index, 1);
-                }
-              })
-              .catch((err) => {
-                console.log(err);
-              });
+            // this.$set(this, "tableData", );
+            console.log("deleteStart:", this.tableData.length);
+
+            this.tableData.splice(1, 1);
+            this.$forceUpdate();
+            console.log("deleteEnd:", this.tableData.length, this.tableData);
+
+            // instanceAxios
+            //   .delete("/xdp-acl/IPv4/rule" + `?priority=${priority}`)
+            //   .then((res) => {
+            //     if (res.status === 200) {
+            //       this.$notify({
+            //         title: "成功",
+            //         message: "删除成功",
+            //         type: "success",
+            //         duration: 3000,
+            //       });
+
+            //       // for (var i = 0; i < this.tableData.length; i++) {
+            //       //   if (this.tableData[i].priority == row.priority) {
+            //       //     break;
+            //       //   }
+            //       // }
+            //     }
+            //   })
+            //   .catch((err) => {
+            //     console.log(err);
+            //   });
           }
         },
       });
     },
     formSubmit(data) {
-      console.log("formSubmit:", data);
-      this.tableData.rules_arr.unshift(this.tableDataFormat(data));
-      console.log("formSubmit this.tableData.rules_arr", this.tableData.rules_arr);
+      this.tableData.unshift(this.tableDataFormat(data));
       this.dialogFormVisible = false;
       this.$notify({
         title: "提示",
@@ -250,10 +259,24 @@ export default {
         type: "success",
         duration: 2000,
       });
+      // this.tableDataDispose();
     },
     formCancel() {
       this.dialogFormVisible = false;
     },
+
+    // tableDataDispose() {
+    //   const that = this;
+    //   if (this.isFirstLoad) {
+    //     this.tableData.map((item) => {
+    //       that.dataSet(item);
+    //     });
+    //     this.isFirstLoad = false;
+    //   } else {
+    //     that.dataSet(this.tableData[0]);
+    //   }
+    //   this.$refs.rulesTable.reloadData(this.tableData);
+    // },
     tableDataFormat(data) {
       const that = this;
       let x = data;
@@ -279,40 +302,31 @@ export default {
       x.port_dst_arr = this.portFilter(x.port_dst_arr, onlyContainICMP);
       // 创建时间
       x.create_time = that.format(new Date(x.create_time), "yyyy-MM-dd hh:mm:ss");
-      return x;
+      // return x;
     },
 
     mergeRulesHits() {
       let hit_count_obj = {};
-      for (
-        let hits_arr_index = 0;
-        hits_arr_index < this.hitcount_arr.length;
-        hits_arr_index++
-      ) {
-        hit_count_obj[this.hitcount_arr[hits_arr_index].priority] = this.hitcount_arr[
-          hits_arr_index
-        ];
+      for (let i = 0; i < this.hitcount_arr.length; i++) {
+        hit_count_obj[this.hitcount_arr[i].priority] = this.hitcount_arr[i];
       }
-      for (
-        let rules_arr_index = 0;
-        rules_arr_index < this.tableData.rules_arr.length;
-        rules_arr_index++
-      ) {
+      for (let i = 0; i < this.tableData.length; i++) {
         this.$set(
-          this.tableData.rules_arr[rules_arr_index],
+          this.tableData[i],
           "hitcount",
-          BigInt(
-            hit_count_obj[this.tableData.rules_arr[rules_arr_index].priority].hit_count
-          )
+          BigInt(hit_count_obj[this.tableData[i].priority].hit_count)
         );
+        // this.tableData[i].hitcount = BigInt(
+        //   hit_count_obj[this.tableData[i].priority].hit_count
+        // );
       }
-      if (this.isFirstLoad) {
-        this.tableData.rules_arr.map((x) => {
-          this.tableDataFormat(x);
-        });
-        this.isFirstLoad = false;
-      }
-      // this.$refs.rulesTable.reloadData(this.tableData.rules_arr);
+      // if (this.isFirstLoad) {
+      //   this.tableData.map((rule_item) => {
+      //     this.tableDataFormat(rule_item);
+      //   });
+      //   this.isFirstLoad = false;
+      // }
+      this.$refs.rulesTable.reloadData(this.tableData);
     },
     // 通过策略来控制端口的显示格式
     portFilter(portArray, onlyContainICMP) {
