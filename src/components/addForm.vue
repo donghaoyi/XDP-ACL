@@ -3,7 +3,6 @@
     <el-dialog
       title="添加规则"
       :visible.sync="dialogFormVisible"
-      v-if="dialogFormVisible"
       :before-close="formCancel"
       top="12vh"
       width="500px"
@@ -20,7 +19,7 @@
         :hide-required-asterisk="true"
       >
         <el-form-item
-          label="编号 :"
+          label="优先级 :"
           prop="priority"
           type="number"
           :label-width="formLabelWidth"
@@ -29,6 +28,7 @@
           <el-input
             class="input-little"
             v-model="form.priority"
+            @mousewheel.native.prevent 
             type="number"
             oninput="if(value>10239)value=10239;if(value<1)value=1"
           ></el-input>
@@ -295,15 +295,15 @@ export default {
       },
       rules: {
         priority: [
-          { required: true, message: "请输入编号", trigger: "blur" },
+          { required: true, message: "请输入优先级", trigger: "blur" },
           {
             validator(rules, values, callback) {
               if (Number(values) < 1 || Number(values) > 10239) {
-                callback(new Error("编号范围:1~10239"));
+                callback(new Error("优先级范围:1~10239"));
               } else {
                 that.tableData.forEach((item) => {
                   if (Number(values) == item.priority) {
-                    callback(new Error("编号已存在"));
+                    callback(new Error("优先级已存在"));
                   }
                 });
                 callback();
@@ -418,7 +418,9 @@ export default {
         .post("/xdp-acl/IPv4/rule", newFormData)
         .then((res) => {
           if (res.status === 201) {
-            this.$emit("formSubmit", res.data);
+            let newRuleObj = Object.assign(res.data,{hitcount:0})
+            console.log(newRuleObj)
+            this.$emit("formSubmit", newRuleObj);
           }
           this.czfas.map((item) => {
             item.disabled = false;
@@ -468,14 +470,12 @@ export default {
 </script>
 
 <style>
-/* 去掉input[number]默认样式 */
-input[type="number"] {
-  -moz-appearance: textfield;
-}
-/* MAC与IOS兼容设置 */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
 }
 .input-view {
   width: 280px !important;
@@ -496,7 +496,7 @@ input::-webkit-inner-spin-button {
 .el-input-number.is-controls-right .el-input__inner {
   padding-right: 45px !important;
 }
-.el-dialog .el-dialog__body {
+.addForm .el-dialog .el-dialog__body {
   padding: 10px 0px 0px;
 }
 
@@ -513,10 +513,10 @@ input::-webkit-inner-spin-button {
   line-height: 2px;
   white-space: nowrap;
 }
-.el-dialog .el-dialog__body {
+.addForm .el-dialog .el-dialog__body {
   padding: 10px 10px 0px 10px;
 }
-.el-dialog__footer {
+.addForm .el-dialog__footer {
   padding-top: 0px !important;
 }
 input[disabled] {

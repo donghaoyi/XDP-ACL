@@ -20,21 +20,27 @@
       stripe
       :height="height"
       :border="false"
+      :sortConfig="{ trigger: 'cell', orders: ['asc', 'desc', 'null'] }"
     >
       <ux-table-column
         field="priority"
-        title="编号"
-        sortable
+        title="优先级"
+        :sortable="true"
         align="center"
         width="80px"
-      ></ux-table-column>
+      >
+      </ux-table-column>
       <ux-table-column
         field="strategy"
         title="策略"
         width="60px"
         align="center"
       ></ux-table-column>
-      <ux-table-column field="protos" title="协议类型" align="center"></ux-table-column>
+      <ux-table-column
+        field="protos"
+        title="协议类型"
+        align="center"
+      ></ux-table-column>
       <ux-table-column
         field="addr_src.ip_mask"
         title="源 IP"
@@ -50,7 +56,9 @@
             v-for="(src_item, src_index) in scope.row.addr_src_arr"
             :key="src_index"
           >
-            <div slot="content">生效：{{ src_item.net_no }}/{{ src_item.mask }}</div>
+            <div slot="content">
+              生效：{{ src_item.net_no }}/{{ src_item.mask }}
+            </div>
             <p style="cursor: pointer" class="dst_text">
               {{ src_item.ip_user }}/{{ src_item.mask }}
             </p>
@@ -64,7 +72,8 @@
           <div
             class="port-view"
             v-if="
-              scope.row.port_src_arr.length > 0 && Array.isArray(scope.row.port_src_arr)
+              scope.row.port_src_arr.length > 0 &&
+              Array.isArray(scope.row.port_src_arr)
             "
           >
             <span
@@ -90,7 +99,9 @@
             v-for="(dst_item, dst_index) in scope.row.addr_dst_arr"
             :key="dst_index"
           >
-            <div slot="content">生效：{{ dst_item.net_no }}/{{ dst_item.mask }}</div>
+            <div slot="content">
+              生效：{{ dst_item.net_no }}/{{ dst_item.mask }}
+            </div>
             <p style="cursor: pointer" class="dst_text">
               {{ dst_item.ip_user }}/{{ dst_item.mask }}
             </p>
@@ -102,7 +113,8 @@
           <div
             class="port-view"
             v-if="
-              scope.row.port_dst_arr.length > 0 && Array.isArray(scope.row.port_dst_arr)
+              scope.row.port_dst_arr.length > 0 &&
+              Array.isArray(scope.row.port_dst_arr)
             "
           >
             <span
@@ -116,7 +128,12 @@
         </template>
       </ux-table-column>
 
-      <ux-table-column field="hitcount" title="命中次数" sortable align="center">
+      <ux-table-column
+        field="hitcount"
+        title="命中次数"
+        sortable
+        align="center"
+      >
         <template slot-scope="scope">
           <span>{{ scope.row.hitcount }}</span>
         </template>
@@ -131,7 +148,15 @@
       ></ux-table-column>
       <ux-table-column field="" title="操作" width="100px" align="center">
         <template slot-scope="scope">
-          <el-button type="text" size="small" @click="handleDelete(scope)"
+          <el-button
+            type="text"
+            size="mini"
+            @click="handleDelete(scope)"
+            :disabled="
+              scope.row.can_not_del != undefined && scope.row.can_not_del == 1
+                ? true
+                : false
+            "
             >删除</el-button
           >
         </template>
@@ -144,6 +169,27 @@
       @formCancel="formCancel"
       v-if="dialogFormVisible"
     ></addForm>
+    <div class="Dialogdeleta">
+      <el-dialog
+        title="提示"
+        width="420px"
+        v-if="dialogDeletaRule"
+        :visible.sync="dialogDeletaRule"
+      >
+        <p>确定要删除优先级为 {{ deleteRuleObj.row.priority }} 的规则吗？</p>
+        <div slot="footer" class="dialog-footer">
+          <el-button @click="deleteCancel" size="mini" plain>取 消</el-button>
+          <el-button
+            type="primary"
+            @click="deleteRule()"
+            size="mini"
+            style="margin-left: 25px"
+            plain
+            >确 定</el-button
+          >
+        </div>
+      </el-dialog>
+    </div>
   </div>
 </template>
 
@@ -163,6 +209,8 @@ export default {
       },
       dialogFormVisible: false,
       isFirstLoad: true,
+      dialogDeletaRule: false,
+      deleteRuleObj: {},
     };
   },
   mounted() {
@@ -210,49 +258,47 @@ export default {
           }, baseData.timeInterval);
         });
     },
-
     handleDelete(scope) {
-      let priority = scope.row.priority;
-      let rule_index = scope.rowIndex;
-      this.$confirm(`确定要删除编号为 ${priority} 的规则吗？`, "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        callback: (action) => {
-          if (action === "confirm") {
-            instanceAxios
-              .delete("/xdp-acl/IPv4/rule" + `?priority=${priority}`)
-              .then((res) => {
-                if (res.status === 200) {
-                  this.$notify({
-                    title: "成功",
-                    message: "删除成功",
-                    type: "success",
-                    duration: 3000,
-                  });
-                  this.tableData.rules_arr.splice(rule_index, 1);
-                }
-              })
-              .catch((err) => {
-                console.log(err);
-              });
-          }
-        },
-      });
+      this.dialogDeletaRule = true;
+      this.deleteRuleObj = scope;
     },
+    deleteRule() {
+      let priority = this.deleteRuleObj.row.priority;
+      let rule_index = this.deleteRuleObj.rowIndex;
+      instanceAxios
+        .delete("/xdp-acl/IPv4/rule" + `?priority=${priority}`)
+        .then((res) => {
+          if (res.status === 200) {
+            this.$notify({
+              title: "成功",
+              message: "删除成功",
+              type: "success",
+              duration: 3000,
+            });
+            this.tableData.rules_arr.splice(rule_index, 1);
+            this.dialogDeletaRule = false;
+          }
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    },
+
     formSubmit(data) {
-      console.log("formSubmit:", data);
       this.tableData.rules_arr.unshift(this.tableDataFormat(data));
-      console.log("formSubmit this.tableData.rules_arr", this.tableData.rules_arr);
       this.dialogFormVisible = false;
       this.$notify({
         title: "提示",
-        message: `添加编号： ${data.priority} 规则成功`,
+        message: `添加优先级： ${data.priority} 规则成功`,
         type: "success",
         duration: 2000,
       });
     },
     formCancel() {
       this.dialogFormVisible = false;
+    },
+    deleteCancel() {
+      this.dialogDeletaRule = false;
     },
     tableDataFormat(data) {
       const that = this;
@@ -272,13 +318,17 @@ export default {
       }
 
       x.protos = protos_arr.join(" ");
-      let onlyContainICMP = protos_arr.includes("ICMP") && protos_arr.length == 1;
+      let onlyContainICMP =
+        protos_arr.includes("ICMP") && protos_arr.length == 1;
       // 源端口拼接,使用空格分割
       x.port_src_arr = this.portFilter(x.port_src_arr, onlyContainICMP);
       // 需要注意，当端口为空时，为all
       x.port_dst_arr = this.portFilter(x.port_dst_arr, onlyContainICMP);
       // 创建时间
-      x.create_time = that.format(new Date(x.create_time), "yyyy-MM-dd hh:mm:ss");
+      x.create_time = that.format(
+        new Date(x.create_time),
+        "yyyy-MM-dd hh:mm:ss"
+      );
       return x;
     },
 
@@ -289,20 +339,24 @@ export default {
         hits_arr_index < this.hitcount_arr.length;
         hits_arr_index++
       ) {
-        hit_count_obj[this.hitcount_arr[hits_arr_index].priority] = this.hitcount_arr[
-          hits_arr_index
-        ];
+        hit_count_obj[
+          this.hitcount_arr[hits_arr_index].priority
+        ] = this.hitcount_arr[hits_arr_index];
       }
       for (
         let rules_arr_index = 0;
         rules_arr_index < this.tableData.rules_arr.length;
         rules_arr_index++
       ) {
+        if (hit_count_obj[this.tableData.rules_arr[rules_arr_index].priority] == undefined) {
+          continue;
+        }
         this.$set(
           this.tableData.rules_arr[rules_arr_index],
           "hitcount",
           BigInt(
-            hit_count_obj[this.tableData.rules_arr[rules_arr_index].priority].hit_count
+            hit_count_obj[this.tableData.rules_arr[rules_arr_index].priority]
+              .hit_count
           )
         );
       }
@@ -312,7 +366,6 @@ export default {
         });
         this.isFirstLoad = false;
       }
-      // this.$refs.rulesTable.reloadData(this.tableData.rules_arr);
     },
     // 通过策略来控制端口的显示格式
     portFilter(portArray, onlyContainICMP) {
@@ -348,7 +401,9 @@ export default {
         if (new RegExp("(" + k + ")").test(fmt)) {
           fmt = fmt.replace(
             RegExp.$1,
-            RegExp.$1.length == 1 ? o[k] : ("00" + o[k]).substr(("" + o[k]).length)
+            RegExp.$1.length == 1
+              ? o[k]
+              : ("00" + o[k]).substr(("" + o[k]).length)
           );
         }
       }
@@ -384,7 +439,23 @@ export default {
 .dst_text {
   line-height: 10px;
 }
+.el-message-box {
+  padding-bottom: 20px !important;
+}
 .el-message-box__btns > button {
   padding: 7px 15px;
+}
+.el-dialog > .el-dialog__body {
+  padding: 10px 20px;
+}
+.el-dialog > .el-dialog__body > p {
+  margin: 0;
+}
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
 }
 </style>
