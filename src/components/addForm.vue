@@ -28,7 +28,7 @@
           <el-input
             class="input-little"
             v-model="form.priority"
-            @mousewheel.native.prevent 
+            @mousewheel.native.prevent
             type="number"
             oninput="if(value>10239)value=10239;if(value<1)value=1"
           ></el-input>
@@ -49,7 +49,6 @@
           :label-width="formLabelWidth"
           class="form-item-view"
         >
-          <!-- @change="selectChange" -->
           <el-select
             v-model="form.protos"
             multiple
@@ -66,138 +65,169 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item
-          label="源 IP ："
-          :label-width="formLabelWidth"
-          prop="addr_src_arr.ip_user"
-          class="form-item-view"
-        >
-          <template slot="label">
-            <span style="">
-              <el-tooltip style="" class="item" effect="light" placement="top">
-                <div slot="content">
-                  <p class="assist-text">0.0.0.0 表示所有 IP</p>
-                </div>
-                <span
-                  >源 IP
-                  <i class="el-icon-warning-outline ico-pre" style="font-size: 10px"></i
-                ></span>
-              </el-tooltip>
-            </span>
-            :
-          </template>
-          <el-input
-            class="input-small"
-            v-model="form.addr_src_arr.ip_user"
-            autocomplete="off"
-            placeholder="示例 : 123.123.123.123"
-          ></el-input>
-          /
-          <el-input-number
-            v-model="form.addr_src_arr.mask"
-            controls-position="right"
-            :min="0"
-            :max="32"
-            style="width: 80px"
-          ></el-input-number>
-        </el-form-item>
-        <el-form-item
-          label="源端口："
-          :label-width="formLabelWidth"
-          prop="port_src_arr"
-          class="form-item-view"
-        >
-          <template slot="label">
-            <span style="">
-              <el-tooltip style="" class="item" effect="light" placement="top">
-                <div slot="content">
-                  <p class="assist-text">• 端口范围 : 0~65535</p>
-                  <p class="assist-text">• 多个端口用空格分割</p>
-                  <p class="assist-text">• 空白不填表示所有端口</p>
-                </div>
-                <span
-                  >源端口
-                  <i class="el-icon-warning-outline ico-pre" style="font-size: 10px"></i
-                ></span>
-              </el-tooltip>
-            </span>
-            :
-          </template>
-          <el-input
-            class="input-view"
-            v-model="form.port_src_arr"
-            autocomplete="off"
-            placeholder="示例 : 1 60 80"
-            :disabled="isICMP"
-          ></el-input>
-        </el-form-item>
-        <el-form-item
-          label="目的 IP："
-          :label-width="formLabelWidth"
-          prop="addr_dst_arr.ip_user"
-          class="form-item-view"
-        >
-          <template slot="label">
-            <span style="">
-              <el-tooltip style="" class="item" effect="light" placement="top">
-                <div slot="content">
-                  <p class="assist-text">0.0.0.0 表示所有 IP</p>
-                </div>
-                <span
-                  >目的 IP
-                  <i class="el-icon-warning-outline ico-pre" style="font-size: 10px"></i
-                ></span>
-              </el-tooltip>
-            </span>
-            :
-          </template>
-          <el-input
-            class="input-small"
-            v-model="form.addr_dst_arr.ip_user"
-            autocomplete="off"
-            placeholder="示例 : 123.123.123.123"
-          ></el-input>
-          /
-          <el-input-number
-            v-model.number="form.addr_dst_arr.mask"
-            controls-position="right"
-            :min="0"
-            :max="32"
-            style="width: 80px"
-          ></el-input-number>
-        </el-form-item>
-        <el-form-item
-          label="目的端口："
-          :label-width="formLabelWidth"
-          prop="port_dst_arr"
-          class="form-item-view"
-        >
-          <template slot="label">
-            <span style="">
-              <el-tooltip style="" class="item" effect="light" placement="top">
-                <div slot="content">
-                  <p class="assist-text">• 端口范围 : 0~65535</p>
-                  <p class="assist-text">• 多个端口用空格分割</p>
-                  <p class="assist-text">• 空白不填表示所有端口</p>
-                </div>
-                <span
-                  >目的端口
-                  <i class="el-icon-warning-outline ico-pre" style="font-size: 10px"></i
-                ></span>
-              </el-tooltip>
-            </span>
-            :
-          </template>
-          <el-input
-            class="input-view"
-            v-model="form.port_dst_arr"
-            autocomplete="off"
-            placeholder="示例 : 1 60 80"
-            :disabled="isICMP"
-          ></el-input>
-        </el-form-item>
+        <div class="addr-ip-view">
+          <el-form-item
+            label="源 IP ："
+            :label-width="formLabelWidth"
+            prop="addr_src_arr"
+            class="form-item-view addr-ip-item"
+          >
+            <template slot="label">
+              <span style="">
+                <el-tooltip
+                  style=""
+                  class="item"
+                  effect="light"
+                  placement="top"
+                >
+                  <div slot="content">
+                    <p class="assist-text">• 0.0.0.0/0 表示所有 IP</p>
+                    <p class="assist-text">• 多IP段需分行输入</p>
+                  </div>
+                  <span
+                    >源 IP
+                    <i
+                      class="el-icon-warning-outline ico-pre"
+                      style="font-size: 10px"
+                    ></i
+                  ></span>
+                </el-tooltip>
+              </span>
+              :
+            </template>
+            <el-input
+              class="addr-ip-item-textarea"
+              type="textarea"
+              v-model="form.addr_src_arr"
+              autocomplete="off"
+              placeholder="123.123.123.123/24
+124.123.123.123/24"
+            ></el-input>
+          </el-form-item>
+          <el-form-item
+            label="目的 IP："
+            :label-width="formLabelWidth"
+            prop="addr_dst_arr"
+            class="form-item-view addr-ip-item"
+          >
+            <template slot="label">
+              <span style="">
+                <el-tooltip
+                  style=""
+                  class="item"
+                  effect="light"
+                  placement="top"
+                >
+                  <div slot="content">
+                    <p class="assist-text">• 0.0.0.0/0 表示所有 IP</p>
+                    <p class="assist-text">• 多IP段需分行输入</p>
+                  </div>
+                  <span
+                    >目的 IP
+                    <i
+                      class="el-icon-warning-outline ico-pre"
+                      style="font-size: 10px"
+                    ></i
+                  ></span>
+                </el-tooltip>
+              </span>
+              :
+            </template>
+            <el-input
+              class="addr-ip-item-textarea"
+              type="textarea"
+              v-model="form.addr_dst_arr"
+              autocomplete="off"
+              placeholder="123.123.123.123/24
+124.123.123.123/24"
+            ></el-input>
+          </el-form-item>
+        </div>
+        <div class="addr-ip-view">
+          <el-form-item
+            label="源端口："
+            :label-width="formLabelWidth"
+            prop="port_src_arr"
+            class="form-item-view addr-ip-item"
+          >
+            <template slot="label">
+              <span style="">
+                <el-tooltip
+                  style=""
+                  class="item"
+                  effect="light"
+                  placement="top"
+                >
+                  <div slot="content">
+                    <p class="assist-text">• 端口范围 : 0~65535</p>
+                    <p class="assist-text">• 多个端口用空格分割</p>
+                    <p class="assist-text">• 空白不填表示所有端口</p>
+                  </div>
+                  <span
+                    >源端口
+                    <i
+                      class="el-icon-warning-outline ico-pre"
+                      style="font-size: 10px"
+                    ></i
+                  ></span>
+                </el-tooltip>
+              </span>
+              :
+            </template>
+            <el-input
+              class="addr-ip-item-textarea"
+              v-model="form.port_src_arr"
+              autocomplete="off"
+              placeholder="1 60 80"
+              :disabled="isICMP"
+            ></el-input>
+          </el-form-item>
+
+          <el-form-item
+            label="目的端口："
+            :label-width="formLabelWidth"
+            prop="port_dst_arr"
+            class="form-item-view addr-ip-item"
+          >
+            <template slot="label">
+              <span style="">
+                <el-tooltip
+                  style=""
+                  class="item"
+                  effect="light"
+                  placement="top"
+                >
+                  <div slot="content">
+                    <p class="assist-text">• 端口范围 : 0~65535</p>
+                    <p class="assist-text">• 多个端口用空格分割</p>
+                    <p class="assist-text">• 空白不填表示所有端口</p>
+                  </div>
+                  <span
+                    >目的端口
+                    <i
+                      class="el-icon-warning-outline ico-pre"
+                      style="font-size: 10px"
+                    ></i
+                  ></span>
+                </el-tooltip>
+              </span>
+              :
+            </template>
+            <el-input
+              class="addr-ip-item-textarea"
+              v-model="form.port_dst_arr"
+              autocomplete="off"
+              placeholder="1 60 80"
+              :disabled="isICMP"
+            ></el-input>
+          </el-form-item>
+        </div>
       </el-form>
-      <div slot="footer" class="dialog-footer" style="margin-right: 70px; padding-top: 0">
+      <div
+        slot="footer"
+        class="dialog-footer"
+        style="margin-right: 70px; padding-top: 0"
+      >
         <el-button @click="formCancel" size="mini" plain>取 消</el-button>
         <el-button
           type="primary"
@@ -220,16 +250,13 @@ export default {
   data() {
     const that = this;
     let validatorIP = function (rules, values, callback) {
-      if (!values.length) {
+      if (values == undefined) {
         callback(new Error("IP不可为空"));
       } else {
-        let ip_mask_pattern = /^([0-9]{1,3}\.){3}[0-9]{1,3}(\/([0-9]|[1-2][0-9]|3[0-2]))?$/;
-        let mask = that.form[rules.field.split(".")[0]].mask;
-        if (!ip_mask_pattern.test(values + "/" + mask)) {
-          callback(new Error("IP格式错误"));
-          return false;
-        } else {
+        if (that.splitIpArray(values).length) {
           callback();
+        } else {
+          callback(new Error(that.splitIpArray(values).errText));
         }
       }
     };
@@ -282,15 +309,9 @@ export default {
         priority: "",
         strategy: 2,
         protos: [],
-        addr_src_arr: {
-          ip_user: "0.0.0.0",
-          mask: 24,
-        },
+        addr_src_arr: "",
         port_src_arr: "",
-        addr_dst_arr: {
-          ip_user: "0.0.0.0",
-          mask: 0,
-        },
+        addr_dst_arr: "",
         port_dst_arr: "",
       },
       rules: {
@@ -325,13 +346,13 @@ export default {
             trigger: "blur",
           },
         ],
-        "addr_src_arr.ip_user": [
+        addr_src_arr: [
           {
             validator: validatorIP,
             trigger: "blur",
           },
         ],
-        "addr_dst_arr.ip_user": [
+        addr_dst_arr: [
           {
             validator: validatorIP,
             trigger: "blur",
@@ -390,36 +411,22 @@ export default {
       formData.protos = protos;
       formData.priority = Number(formData.priority);
       formData.port_src_arr =
-        formData.port_src_arr.length == 0 ? [] : this.portFilter(formData.port_src_arr);
+        formData.port_src_arr.length == 0
+          ? []
+          : this.portFilter(formData.port_src_arr);
       formData.port_dst_arr =
-        formData.port_dst_arr.length == 0 ? [] : this.portFilter(formData.port_dst_arr);
-      let newFormData = formData;
-
-      newFormData.addr_src_arr = [formData.addr_src_arr];
-      newFormData.addr_dst_arr = [formData.addr_dst_arr];
-
-      /*
-        priority: "",
-        strategy: 2,
-        protos: [],
-        addr_src_arr: {
-          ip_user: "0.0.0.0",
-          mask: 24,
-        },
-        port_src_arr: "",
-        addr_dst_arr: {
-          ip_user: "0.0.0.0",
-          mask: 0,
-        },
-        port_dst_arr: "",
-        */
-
+        formData.port_dst_arr.length == 0
+          ? []
+          : this.portFilter(formData.port_dst_arr);
+      console.log(formData);
+      formData.addr_src_arr = this.splitIpArray(formData.addr_src_arr);
+      formData.addr_dst_arr = this.splitIpArray(formData.addr_dst_arr);
       instanceAxios
-        .post("/xdp-acl/IPv4/rule", newFormData)
+        .post("/xdp-acl/IPv4/rule", formData)
         .then((res) => {
           if (res.status === 201) {
-            let newRuleObj = Object.assign(res.data,{hitcount:0})
-            console.log(newRuleObj)
+            let newRuleObj = Object.assign(res.data, { hitcount: 0 });
+            console.log(newRuleObj);
             this.$emit("formSubmit", newRuleObj);
           }
           this.czfas.map((item) => {
@@ -433,6 +440,29 @@ export default {
     },
     formCancel() {
       this.$emit("formCancel", false);
+    },
+    splitIpArray(data) {
+      let raw_ip_arr = data.trim().split(/\s+/);
+      let new_ip_arr = [];
+      let ip_mask_pattern = /^([0-9]{1,3}\.){3}[0-9]{1,3}(\/([0-9]|[1-2][0-9]|3[0-2]))?$/;
+
+      for (let ip_index = 0; ip_index < raw_ip_arr.length; ip_index++) {
+        let ip_index_arr = raw_ip_arr[ip_index].split("/");
+        if (ip_index_arr.length < 2) {
+          return { errText: "IP不完整", state: false };
+        }
+        if (Number(ip_index_arr[2]) > -1 && Number(ip_index_arr[2]) < 33) {
+          return { errText: "子网掩码超出范围", state: false };
+        }
+        if (!ip_mask_pattern.test(raw_ip_arr[ip_index])) {
+          return { errText: `第${++ip_index}行IP格式错误`, state: false };
+        }
+        new_ip_arr.push({
+          ip_user: ip_index_arr[0],
+          mask: Number(ip_index_arr[1]),
+        });
+      }
+      return new_ip_arr;
     },
     portFilter(port) {
       let portArry = port.trim().split(/\s+/).map(Number);
@@ -474,7 +504,7 @@ input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
 }
-input[type='number'] {
+input[type="number"] {
   -moz-appearance: textfield;
 }
 .input-view {
@@ -522,4 +552,21 @@ input[type='number'] {
 input[disabled] {
   background: #949597;
 }
+.addr-ip-view {
+  display: flex;
+  width: 360px;
+  margin-left: 54px;
+  justify-content: space-between;
+}
+.addr-ip-view > .addr-ip-item label {
+  text-align: left;
+}
+.addr-ip-view > .addr-ip-item .addr-ip-item-textarea {
+  width: 165px;
+}
+.addr-ip-view > .addr-ip-item .addr-ip-item-textarea > textarea {
+  height: 65px;
+}
+
+/* 多个ip */
 </style>

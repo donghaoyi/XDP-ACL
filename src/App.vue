@@ -59,7 +59,7 @@
             <div slot="content">
               生效：{{ src_item.net_no }}/{{ src_item.mask }}
             </div>
-            <p style="cursor: pointer" class="dst_text">
+            <p style="cursor: pointer;" class="dst_text">
               {{ src_item.ip_user }}/{{ src_item.mask }}
             </p>
           </el-tooltip>
