@@ -42,7 +42,7 @@
         align="center"
       ></ux-table-column>
       <ux-table-column
-        field="addr_src.ip_mask"
+        field="addr_src.cidr_user"
         title="源 IP"
         :show-overflow-tooltip="false"
         width="140px"
@@ -56,11 +56,9 @@
             v-for="(src_item, src_index) in scope.row.addr_src_arr"
             :key="src_index"
           >
-            <div slot="content">
-              生效：{{ src_item.net_no }}/{{ src_item.mask }}
-            </div>
-            <p style="cursor: pointer;" class="dst_text">
-              {{ src_item.ip_user }}/{{ src_item.mask }}
+            <div slot="content">生效：{{ src_item.cidr_standard }}</div>
+            <p style="cursor: pointer" class="dst_text">
+              {{ src_item.cidr_user }}
             </p>
           </el-tooltip>
         </template>
@@ -99,11 +97,9 @@
             v-for="(dst_item, dst_index) in scope.row.addr_dst_arr"
             :key="dst_index"
           >
-            <div slot="content">
-              生效：{{ dst_item.net_no }}/{{ dst_item.mask }}
-            </div>
+            <div slot="content">生效：{{ dst_item.cidr_standard }}</div>
             <p style="cursor: pointer" class="dst_text">
-              {{ dst_item.ip_user }}/{{ dst_item.mask }}
+              {{ dst_item.cidr_user }}
             </p>
           </el-tooltip>
         </template>
@@ -214,7 +210,10 @@ export default {
     };
   },
   mounted() {
-    this.height = 600; // 动态设置高度
+    // document.get
+    let table_height = window.outerHeight * 0.65;
+    console.log("BHright", table_height);
+    this.height = table_height; // 动态设置高度
     this.getRules();
   },
   components: {
@@ -348,7 +347,10 @@ export default {
         rules_arr_index < this.tableData.rules_arr.length;
         rules_arr_index++
       ) {
-        if (hit_count_obj[this.tableData.rules_arr[rules_arr_index].priority] == undefined) {
+        if (
+          hit_count_obj[this.tableData.rules_arr[rules_arr_index].priority] ==
+          undefined
+        ) {
           continue;
         }
         this.$set(
@@ -457,5 +459,8 @@ input::-webkit-inner-spin-button {
 }
 input[type="number"] {
   -moz-appearance: textfield;
+}
+.elx-table--border-line {
+  border: none !important;
 }
 </style>

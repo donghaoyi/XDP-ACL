@@ -26,11 +26,20 @@ instanceAxios.interceptors.response.use(response => {
     return response;
 }, error => {
     loading.close();
-    console.log('====>', error);
-    Notification.error({
-        title: '错误',
-        message: error
-    })
+    console.log('====>', error.response);
+    if (error.response == undefined) {
+        Notification.error({
+            title: '错误',
+            message: error
+        })
+    } else {
+        let msg = error.response.data.msg;
+        console.log('msg',error.response.data)
+        Notification.error({
+            title: '错误',
+            message: msg
+        })
+    }
     return Promise.reject(error);
 });
 

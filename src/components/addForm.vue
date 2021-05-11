@@ -5,7 +5,7 @@
       :visible.sync="dialogFormVisible"
       :before-close="formCancel"
       top="12vh"
-      width="500px"
+      width="520px"
       :destroy-on-close="true"
     >
       <el-form
@@ -30,7 +30,6 @@
             v-model="form.priority"
             @mousewheel.native.prevent
             type="number"
-            oninput="if(value>10239)value=10239;if(value<1)value=1"
           ></el-input>
         </el-form-item>
         <el-form-item
@@ -54,7 +53,7 @@
             multiple
             placeholder="请选择"
             clearable
-            class="input-view"
+            class="one-line-select"
           >
             <el-option
               v-for="item in czfas"
@@ -226,7 +225,7 @@
       <div
         slot="footer"
         class="dialog-footer"
-        style="margin-right: 70px; padding-top: 0"
+        style="margin-right: 55px; padding-top: 0"
       >
         <el-button @click="formCancel" size="mini" plain>取 消</el-button>
         <el-button
@@ -385,8 +384,8 @@ export default {
         if (!valid) {
           setTimeout(() => {
             let error = document.getElementsByClassName("is-error");
-            error[0].querySelector("input").focus();
-          }, 100);
+            error[0].querySelector('div').focus();
+          }, 1);
         }
       });
       if (!isValid) {
@@ -418,7 +417,6 @@ export default {
         formData.port_dst_arr.length == 0
           ? []
           : this.portFilter(formData.port_dst_arr);
-      console.log(formData);
       formData.addr_src_arr = this.splitIpArray(formData.addr_src_arr);
       formData.addr_dst_arr = this.splitIpArray(formData.addr_dst_arr);
       instanceAxios
@@ -426,7 +424,6 @@ export default {
         .then((res) => {
           if (res.status === 201) {
             let newRuleObj = Object.assign(res.data, { hitcount: 0 });
-            console.log(newRuleObj);
             this.$emit("formSubmit", newRuleObj);
           }
           this.czfas.map((item) => {
@@ -458,8 +455,7 @@ export default {
           return { errText: `第${++ip_index}行IP格式错误`, state: false };
         }
         new_ip_arr.push({
-          ip_user: ip_index_arr[0],
-          mask: Number(ip_index_arr[1]),
+          cidr_user: raw_ip_arr[ip_index],
         });
       }
       return new_ip_arr;
@@ -500,6 +496,7 @@ export default {
 </script>
 
 <style>
+
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -514,20 +511,18 @@ input[type="number"] {
   margin-bottom: 18px;
 }
 .input-little {
-  width: 110px !important;
+  width: 140px !important;
 }
 .input-small {
   width: 186px !important;
 }
+
 .form-item-view .el-form-item__label,
 .el-select-dropdown__list .el-select-dropdown__item {
   font-size: 12px;
 }
 .el-input-number.is-controls-right .el-input__inner {
   padding-right: 45px !important;
-}
-.addForm .el-dialog .el-dialog__body {
-  padding: 10px 0px 0px;
 }
 
 .input-assist-view {
@@ -544,10 +539,11 @@ input[type="number"] {
   white-space: nowrap;
 }
 .addForm .el-dialog .el-dialog__body {
-  padding: 10px 10px 0px 10px;
+  padding: 10px 30px 0px 2px!important;
 }
 .addForm .el-dialog__footer {
   padding-top: 0px !important;
+  padding-right: 0!important;
 }
 input[disabled] {
   background: #949597;
@@ -562,11 +558,21 @@ input[disabled] {
   text-align: left;
 }
 .addr-ip-view > .addr-ip-item .addr-ip-item-textarea {
-  width: 165px;
+  width: 199px;
 }
 .addr-ip-view > .addr-ip-item .addr-ip-item-textarea > textarea {
   height: 65px;
 }
-
-/* 多个ip */
+.el-textarea__inner{
+  padding: 10px!important;
+}
+.el-input__inner{
+  padding:0 10px!important;
+}
+/* .el-input.el-input--mini.el-input--suffix{
+  width: 315px;
+} */
+.one-line-select{
+  width: 340px;
+}
 </style>
