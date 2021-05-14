@@ -10,6 +10,7 @@
       >添加规则</el-button
     >
     <ux-grid
+      :data="tableData.rules_arr"
       ref="rulesTable"
       row-class-name="tableRowClassName"
       cell-class-name="tablCellClassName"
@@ -221,7 +222,7 @@ export default {
   },
   watch: {
     "tableData.rules_arr"() {
-      this.$refs.rulesTable.reloadData(this.tableData.rules_arr);
+      // this.$refs.rulesTable.reloadData(this.tableData.rules_arr);
     },
   },
   methods: {
@@ -270,7 +271,7 @@ export default {
           if (res.status === 200) {
             this.$notify({
               title: "成功",
-              message: "删除成功",
+              message: `规则: ${priority} 删除成功`,
               type: "success",
               duration: 3000,
             });
@@ -288,7 +289,7 @@ export default {
       this.dialogFormVisible = false;
       this.$notify({
         title: "提示",
-        message: `添加优先级： ${data.priority} 规则成功`,
+        message: `规则： ${data.priority} 添加成功`,
         type: "success",
         duration: 2000,
       });
@@ -462,5 +463,8 @@ input[type="number"] {
 }
 .elx-table--border-line {
   border: none !important;
+}
+.el-notification__content{
+  font-size: 12px;
 }
 </style>
