@@ -23,6 +23,87 @@
       :border="false"
       :sortConfig="{ trigger: 'cell', orders: ['asc', 'desc', 'null'] }"
     >
+      <ux-table-column type="expand" width="40px">
+        <template v-slot:content="{ row }">
+          <div class="expand-view" style="display: flex">
+            <div class="elx-cell c--ellipsis" style="width: 40px"></div>
+            <div class="elx-cell c--ellipsis" style="width: 80px">
+              <span>{{ row.priority }}</span>
+            </div>
+            <div class="elx-cell c--ellipsis" style="width: 60px">
+              <span>{{ row.strategy }}</span>
+            </div>
+            <div class="elx-cell c--ellipsis" style="flex:1">
+              <span>{{ row.protos }}</span>
+            </div>
+            <div class="elx-cell c--ellipsis" style="width: 140px">
+              <el-tooltip
+                placement="top-start"
+                effect="light"
+                v-for="(src_item, src_index) in row.addr_src_arr"
+                :key="src_index"
+              >
+                <div slot="content">生效：{{ src_item.cidr_standard }}</div>
+                <p style="cursor: pointer" class="dst_text">
+                  {{ src_item.cidr_user }}
+                </p>
+              </el-tooltip>
+            </div>
+            <div class="elx-cell c--ellipsis" style="flex:1">
+              <div
+                class="port-view"
+                v-if="
+                  row.port_src_arr.length > 0 && Array.isArray(row.port_src_arr)
+                "
+              >
+                <span
+                  v-for="(item, index) in row.port_src_arr"
+                  :key="index"
+                  class="port-span"
+                  >{{ item }}&nbsp;</span
+                >
+              </div>
+              <div v-else>{{ row.port_src_arr }}</div>
+            </div>
+            <div class="elx-cell c--ellipsis" style="width: 140px">
+              <el-tooltip
+                placement="top-start"
+                effect="light"
+                v-for="(dst_item, dst_index) in row.addr_dst_arr"
+                :key="dst_index"
+              >
+                <div slot="content">生效：{{ dst_item.cidr_standard }}</div>
+                <p style="cursor: pointer" class="dst_text">
+                  {{ dst_item.cidr_user }}
+                </p>
+              </el-tooltip>
+            </div>
+            <div class="elx-cell c--ellipsis" style="flex:1">
+              <div
+                class="port-view"
+                v-if="
+                  row.port_dst_arr.length > 0 && Array.isArray(row.port_dst_arr)
+                "
+              >
+                <span
+                  v-for="(item, index) in row.port_dst_arr"
+                  :key="index"
+                  class="port-span"
+                  >{{ item }}
+                </span>
+              </div>
+              <div v-else>{{ row.port_dst_arr }}</div>
+            </div>
+            <div class="elx-cell c--ellipsis" style="flex:1">
+              {{ row.hitcount }}
+            </div>
+            <div class="elx-cell c--ellipsis" style="width: 140px">
+              {{ row.create_time }}
+            </div>
+            <div style="width: 80px"></div>
+          </div>
+        </template>
+      </ux-table-column>
       <ux-table-column
         field="priority"
         title="优先级"
@@ -58,9 +139,9 @@
             :key="src_index"
           >
             <div slot="content">生效：{{ src_item.cidr_standard }}</div>
-            <p style="cursor: pointer" class="dst_text">
+            <span style="cursor: pointer" class="dst_text">
               {{ src_item.cidr_user }}
-            </p>
+            </span>
           </el-tooltip>
         </template>
 
@@ -99,9 +180,9 @@
             :key="dst_index"
           >
             <div slot="content">生效：{{ dst_item.cidr_standard }}</div>
-            <p style="cursor: pointer" class="dst_text">
+            <span style="cursor: pointer" class="dst_text">
               {{ dst_item.cidr_user }}
-            </p>
+            </span>
           </el-tooltip>
         </template>
       </ux-table-column>
@@ -131,19 +212,15 @@
         sortable
         align="center"
       >
-        <template slot-scope="scope">
-          <span>{{ scope.row.hitcount }}</span>
-        </template>
       </ux-table-column>
-
       <ux-table-column
         field="create_time"
         title="创建时间"
-        width="160px"
+        width="140px"
         sortable
         align="center"
       ></ux-table-column>
-      <ux-table-column field="" title="操作" width="100px" align="center">
+      <ux-table-column field="" title="操作" width="80px" align="center">
         <template slot-scope="scope">
           <el-button
             type="text"
@@ -202,7 +279,6 @@ export default {
       height: 0,
       tableData: {
         rules_arr: [],
-        hitcount_arr: [],
       },
       dialogFormVisible: false,
       isFirstLoad: true,
@@ -219,11 +295,6 @@ export default {
   },
   components: {
     addForm,
-  },
-  watch: {
-    "tableData.rules_arr"() {
-      // this.$refs.rulesTable.reloadData(this.tableData.rules_arr);
-    },
   },
   methods: {
     getRules() {
@@ -244,8 +315,7 @@ export default {
         .get(baseData.URL + "/xdp-acl/IPv4/rules/hitcount")
         .then((result) => {
           if (result.status === 200) {
-            this.hitcount_arr = result.data;
-            this.mergeRulesHits();
+            this.mergeRulesHits(result.data);
           }
           setTimeout(() => {
             this.getHitcount();
@@ -332,16 +402,15 @@ export default {
       return x;
     },
 
-    mergeRulesHits() {
+    mergeRulesHits(hitcount_arr) {
       let hit_count_obj = {};
       for (
         let hits_arr_index = 0;
-        hits_arr_index < this.hitcount_arr.length;
+        hits_arr_index < hitcount_arr.length;
         hits_arr_index++
       ) {
-        hit_count_obj[
-          this.hitcount_arr[hits_arr_index].priority
-        ] = this.hitcount_arr[hits_arr_index];
+        hit_count_obj[hitcount_arr[hits_arr_index].priority] =
+          hitcount_arr[hits_arr_index];
       }
       for (
         let rules_arr_index = 0;
@@ -354,14 +423,21 @@ export default {
         ) {
           continue;
         }
-        this.$set(
-          this.tableData.rules_arr[rules_arr_index],
-          "hitcount",
-          BigInt(
-            hit_count_obj[this.tableData.rules_arr[rules_arr_index].priority]
-              .hit_count
-          )
-        );
+        if (
+          hit_count_obj[this.tableData.rules_arr[rules_arr_index].priority]
+            .hit_count == this.tableData.rules_arr[rules_arr_index].hitcount
+        ) {
+          continue;
+        } else {
+          this.$set(
+            this.tableData.rules_arr[rules_arr_index],
+            "hitcount",
+            BigInt(
+              hit_count_obj[this.tableData.rules_arr[rules_arr_index].priority]
+                .hit_count
+            )
+          );
+        }
       }
       if (this.isFirstLoad) {
         this.tableData.rules_arr.map((x) => {
@@ -411,6 +487,9 @@ export default {
         }
       }
       return fmt;
+    },
+    handlePageSize({ page, size }) {
+      console.log("page:", page, "size:", size);
     },
   },
 };
@@ -464,7 +543,32 @@ input[type="number"] {
 .elx-table--border-line {
   border: none !important;
 }
-.el-notification__content{
+.el-notification__content {
   font-size: 12px;
+}
+.demo-table-expand {
+  font-size: 0;
+}
+.demo-table-expand label {
+  width: 90px;
+  color: #99a9bf;
+}
+.demo-table-expand .el-form-item {
+  margin-right: 0 !important;
+  margin-bottom: 0;
+  width: 14%;
+}
+.elx-body--expanded-cell {
+  padding: 0 !important;
+}
+.expand-view {
+  display: flex;
+  /* justify-content: space-between; */
+}
+.expand-view > .elx-cell.c--ellipsis {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
 }
 </style>

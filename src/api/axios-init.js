@@ -3,7 +3,7 @@ import { Loading, Notification } from 'element-ui';
 import baseData from './helpers';
 const instanceAxios = axios.create({
     baseURL: baseData.URL,
-    timeout: 5000,
+    timeout: 15000,
 })
 let loading = null;
 // 添加请求拦截器
