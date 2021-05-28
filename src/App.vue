@@ -33,7 +33,7 @@
             <div class="elx-cell c--ellipsis" style="width: 60px">
               <span>{{ row.strategy }}</span>
             </div>
-            <div class="elx-cell c--ellipsis" style="flex:1">
+            <div class="elx-cell c--ellipsis" style="flex: 1">
               <span>{{ row.protos }}</span>
             </div>
             <div class="elx-cell c--ellipsis" style="width: 140px">
@@ -49,7 +49,7 @@
                 </p>
               </el-tooltip>
             </div>
-            <div class="elx-cell c--ellipsis" style="flex:1">
+            <div class="elx-cell c--ellipsis" style="flex: 1">
               <div
                 class="port-view"
                 v-if="
@@ -78,7 +78,7 @@
                 </p>
               </el-tooltip>
             </div>
-            <div class="elx-cell c--ellipsis" style="flex:1">
+            <div class="elx-cell c--ellipsis" style="flex: 1">
               <div
                 class="port-view"
                 v-if="
@@ -94,7 +94,7 @@
               </div>
               <div v-else>{{ row.port_dst_arr }}</div>
             </div>
-            <div class="elx-cell c--ellipsis" style="flex:1">
+            <div class="elx-cell c--ellipsis" style="flex: 1">
               {{ row.hitcount }}
             </div>
             <div class="elx-cell c--ellipsis" style="width: 140px">
@@ -137,8 +137,11 @@
             effect="light"
             v-for="(src_item, src_index) in scope.row.addr_src_arr"
             :key="src_index"
+            :disabled="!(scope.row.addr_src_arr.length === 1)"
           >
-            <div slot="content">生效：{{ src_item.cidr_standard }}</div>
+            <div slot="content">
+              生效：{{ src_item.cidr_standard }}
+            </div>
             <span style="cursor: pointer" class="dst_text">
               {{ src_item.cidr_user }}
             </span>
@@ -178,8 +181,11 @@
             effect="light"
             v-for="(dst_item, dst_index) in scope.row.addr_dst_arr"
             :key="dst_index"
+            :disabled="!(scope.row.addr_dst_arr.length === 1)"
           >
-            <div slot="content">生效：{{ dst_item.cidr_standard }}</div>
+            <div slot="content">
+              生效：{{ dst_item.cidr_standard }}
+            </div>
             <span style="cursor: pointer" class="dst_text">
               {{ dst_item.cidr_user }}
             </span>

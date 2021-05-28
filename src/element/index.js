@@ -7,8 +7,8 @@ import {
     Option,
     OptionGroup,
     Button,
-    Table,
-    TableColumn,
+    // Table,
+    // TableColumn,
     Tooltip,
     Form,
     FormItem,
@@ -19,7 +19,7 @@ import {
     Loading,
     Notification,
     Tag,
-    MessageBox
+    // MessageBox
 } from 'element-ui'
 const element = {
     install: function (Vue) {
@@ -34,8 +34,8 @@ const element = {
         Vue.use(Autocomplete)
         Vue.use(InputNumber)
         Vue.use(Button)
-        Vue.use(Table)
-        Vue.use(TableColumn)
+        // Vue.use(Table)
+        // Vue.use(TableColumn)
         Vue.use(Tooltip)
         Vue.use(Form)
         Vue.use(FormItem)
@@ -44,7 +44,7 @@ const element = {
         Vue.use(Tag)
 
         Vue.prototype.$loading = Loading.service;
-        Vue.prototype.$confirm = MessageBox.confirm;
+        // Vue.prototype.$confirm = MessageBox.confirm;
         Vue.prototype.$notify = Notification;
     }
 }
